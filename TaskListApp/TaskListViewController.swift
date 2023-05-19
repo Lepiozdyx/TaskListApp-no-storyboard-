@@ -9,8 +9,8 @@ import UIKit
 import CoreData
 
 final class TaskListViewController: UITableViewController {
-    private let viewContext = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
+    private let storageManager = StorageManager.shared
     private let cellID = "cell"
     private var taskList: [Task] = []
 
@@ -19,7 +19,7 @@ final class TaskListViewController: UITableViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
         view.backgroundColor = .white
         setupNavigationBar()
-        fetchData()
+        taskList = storageManager.fetchData()
     }
     
     // MARK: - UITableViewDataSource
@@ -35,26 +35,21 @@ final class TaskListViewController: UITableViewController {
         cell.contentConfiguration = content
         return cell
     }
-
+    
+    // MARK: - Methods for creating and displaying new tasks
     @objc private func addNewTask() {
         showAlert(withTitle: "New Task", andMessage: "What do you want to do?")
-    }
-    
-    private func fetchData() {
-        let fetchRequest = Task.fetchRequest()
-        
-        do {
-            taskList = try viewContext.fetch(fetchRequest)
-        } catch {
-            print(error.localizedDescription)
-        }
     }
     
     private func showAlert(withTitle title: String, andMessage message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [unowned self] _ in
             guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
-            save(task)
+            let newTask = storageManager.save(task)
+            taskList.append(newTask)
+            
+            let indexPath = IndexPath(row: taskList.count - 1, section: 0)
+            tableView.insertRows(at: [indexPath], with: .automatic)
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
         alert.addAction(saveAction)
@@ -65,23 +60,6 @@ final class TaskListViewController: UITableViewController {
         present(alert, animated: true)
     }
     
-    private func save(_ taskName: String) {
-        let task = Task(context: viewContext)
-        task.title = taskName
-        taskList.append(task)
-        
-        let indexPath = IndexPath(row: taskList.count - 1, section: 0)
-        tableView.insertRows(at: [indexPath], with: .automatic)
-        
-        if viewContext.hasChanges {
-            do {
-                try viewContext.save()
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
-        dismiss(animated: true)
-    }
 }
 
 // MARK: - SetupUI
