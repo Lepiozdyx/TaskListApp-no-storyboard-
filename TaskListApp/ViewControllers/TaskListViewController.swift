@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import CoreData
 
 final class TaskListViewController: UITableViewController {
     
@@ -80,7 +79,7 @@ final class TaskListViewController: UITableViewController {
         let saveAction = UIAlertAction(title: "Save", style: .default) { [unowned self] _ in
             guard let newText = alert.textFields?.first?.text, !newText.isEmpty else { return }
             storageManager.update(task, with: newText)
-            tableView.reloadData()
+            tableView.reloadRows(at: [indexPath], with: .automatic)
         }
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
