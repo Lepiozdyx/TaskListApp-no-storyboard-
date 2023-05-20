@@ -36,6 +36,21 @@ final class TaskListViewController: UITableViewController {
         return cell
     }
     
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            let deletedTask = taskList[indexPath.row]
+            storageManager.delete(deletedTask)
+            taskList.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+        }
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let task = taskList[indexPath.row]
+        updateAlert(for: task, at: indexPath)
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
     // MARK: - Methods for creating and displaying new tasks
     @objc private func addNewTask() {
         showAlert(withTitle: "New Task", andMessage: "What do you want to do?")
@@ -56,6 +71,23 @@ final class TaskListViewController: UITableViewController {
         alert.addAction(cancelAction)
         alert.addTextField { textText in
             textText.placeholder = "New Task"
+        }
+        present(alert, animated: true)
+    }
+    
+    private func updateAlert(for task: Task, at indexPath: IndexPath) {
+        let alert = UIAlertController(title: "Edit", message: "Edit your task", preferredStyle: .alert)
+        let saveAction = UIAlertAction(title: "Save", style: .default) { [unowned self] _ in
+            guard let newText = alert.textFields?.first?.text, !newText.isEmpty else { return }
+            storageManager.update(task, with: newText)
+            tableView.reloadData()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
+        alert.addAction(saveAction)
+        alert.addAction(cancelAction)
+        alert.addTextField { textText in
+            textText.text = task.title
         }
         present(alert, animated: true)
     }
@@ -83,6 +115,7 @@ private extension TaskListViewController {
             target: self,
             action: #selector(addNewTask)
         )
+        navigationItem.leftBarButtonItem = editButtonItem
         navigationController?.navigationBar.tintColor = .white
     }
 }

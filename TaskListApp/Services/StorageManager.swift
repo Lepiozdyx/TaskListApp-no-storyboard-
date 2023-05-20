@@ -38,6 +38,13 @@ final class StorageManager {
     }
     
     // MARK: - CRUD methods
+    func save(_ taskName: String) -> Task {
+        let task = Task(context: viewContext)
+        task.title = taskName
+        saveContext()
+        return task
+    }
+    
     func fetchData() -> [Task] {
         let fetchRequest = Task.fetchRequest()
         
@@ -50,19 +57,14 @@ final class StorageManager {
         }
     }
     
-    func save(_ taskName: String) -> Task {
-        let task = Task(context: viewContext)
-        task.title = taskName
-
-        if viewContext.hasChanges {
-            do {
-                try viewContext.save()
-                return task
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
-        return task
+    func update(_ taskName: Task, with title: String) {
+        taskName.title = title
+        saveContext()
+    }
+    
+    func delete(_ taskName: Task) {
+        viewContext.delete(taskName)
+        saveContext()
     }
     
 }
