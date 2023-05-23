@@ -9,12 +9,11 @@ import Foundation
 import CoreData
 
 final class StorageManager {
+    
     static let shared = StorageManager()
     
-    private init() {}
-    
     // MARK: - Core Data stack
-    private lazy var viewContext: NSManagedObjectContext = {
+    private let viewContext: NSManagedObjectContext = {
         let container = NSPersistentContainer(name: "TaskListApp")
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
@@ -24,12 +23,13 @@ final class StorageManager {
         return container.viewContext
     }()
     
+    private init() {}
+    
     // MARK: - Core Data Saving support
     func saveContext() {
-        let context = viewContext
-        if context.hasChanges {
+        if viewContext.hasChanges {
             do {
-                try context.save()
+                try viewContext.save()
             } catch {
                 let nserror = error as NSError
                 fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
@@ -38,22 +38,22 @@ final class StorageManager {
     }
     
     // MARK: - CRUD methods
-    func save(_ taskName: String) -> Task {
+    func create(_ taskName: String, completion: (Task) -> Void) {
         let task = Task(context: viewContext)
         task.title = taskName
+        completion(task)
         saveContext()
-        return task
     }
     
-    func fetchData() -> [Task] {
+    func fetchData(completion: (Result<[Task], Error>) -> Void) {
         let fetchRequest = Task.fetchRequest()
         
         do {
             let taskList = try viewContext.fetch(fetchRequest)
-            return taskList
+            completion(.success(taskList))
         } catch {
             print(error.localizedDescription)
-            return []
+            completion(.failure(error))
         }
     }
     
