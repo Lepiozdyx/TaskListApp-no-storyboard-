@@ -16,7 +16,7 @@ final class TaskListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
-        view.backgroundColor = .white
+        setupBackgroundColor()
         setupNavigationBar()
         fetchData()
     }
@@ -128,5 +128,9 @@ private extension TaskListViewController {
         
         navigationItem.leftBarButtonItem = editButtonItem
         navigationController?.navigationBar.tintColor = .white
+    }
+    
+    func setupBackgroundColor() {
+        view.backgroundColor = .white
     }
 }
